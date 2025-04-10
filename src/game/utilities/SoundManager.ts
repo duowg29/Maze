@@ -19,17 +19,23 @@ export default class SoundManager {
         if (!this.sounds[soundKey]) {
             this.sounds[soundKey] = this.scene.sound.add(soundKey, { loop });
         }
-        this.sounds[soundKey].play();
+        if (!this.sounds[soundKey].isPlaying) {
+            this.sounds[soundKey].play();
+        }
     }
 
     stop(soundKey: string) {
         if (this.sounds[soundKey]) {
             this.sounds[soundKey].stop();
         }
+        const sound = this.scene.sound.get(soundKey);
+        if (sound && sound.isPlaying) {
+            sound.stop();
+        }
     }
 
     isPlaying(key: string): boolean {
-        const sound = this.scene.sound.get(key);
+        const sound = this.sounds[key] || this.scene.sound.get(key);
         return sound ? sound.isPlaying : false;
     }
 }

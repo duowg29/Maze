@@ -1,7 +1,6 @@
 import { ButtonDTO } from "../dto/ButtonDTO";
 import { textStyle1, textStyle2 } from "../utilities/TextStyle";
 import { Scene } from "phaser";
-import BackgroundLoader from "../utilities/BackgroundLoader";
 
 export default class GameOverScreen extends Scene {
     public score: number;
@@ -19,14 +18,13 @@ export default class GameOverScreen extends Scene {
     }
 
     create(): void {
-        this.load.image("bgGame", "assets/img/bgGame.png");
-        const backgroundLoader = new BackgroundLoader(
-            this,
-            "bgGame",
-            this.cameras.main.centerX,
-            this.cameras.main.centerY
-        );
-        backgroundLoader.loadBackground();
+        this.add
+            .image(
+                this.cameras.main.centerX,
+                this.cameras.main.centerY,
+                "backgroundGame"
+            )
+            .setDisplaySize(this.cameras.main.width, this.cameras.main.height);
 
         this.add
             .text(

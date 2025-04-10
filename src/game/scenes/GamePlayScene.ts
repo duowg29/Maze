@@ -2,7 +2,6 @@ import { ButtonDTO } from "../dto/ButtonDTO";
 import Button from "../utilities/Button";
 import { textStyle1 } from "../utilities/TextStyle";
 import SoundManager from "../utilities/SoundManager";
-import BackgroundLoader from "../utilities/BackgroundLoader";
 import { Scene } from "phaser";
 
 export default class GamePlayScene extends Scene {
@@ -14,20 +13,27 @@ export default class GamePlayScene extends Scene {
     }
 
     preload(): void {
+        this.load.image("rocket", "assets/img/rocket.png");
+        this.load.image("apple", "assets/img/apple.png");
+        this.load.image("ship", "assets/img/ship.png");
+        this.load.image("wall", "assets/img/wall.png");
+        this.load.image("goal", "assets/img/earth.png");
+        this.load.image("scorePowerUp", "assets/img/scorePowerUp.png");
+        this.load.image("timePowerUp", "assets/img/timePowerUp.png");
         this.soundManager = new SoundManager(this, ["bgMusic"]);
         this.soundManager.preload();
-
-        this.load.image("bgMenu", "assets/img/bgMenu.png");
+        this.load.image("backgroundGame", "assets/img/bgGame.png");
+        this.load.image("backgroundMenu", "assets/img/bgMenu.png");
     }
 
     create(): void {
-        const backgroundLoader = new BackgroundLoader(
-            this,
-            "bgMenu",
-            this.cameras.main.centerX,
-            this.cameras.main.centerY
-        );
-        backgroundLoader.loadBackground();
+        this.add
+            .image(
+                this.cameras.main.centerX,
+                this.cameras.main.centerY,
+                "backgroundMenu"
+            )
+            .setDisplaySize(this.cameras.main.width, this.cameras.main.height);
 
         this.soundManager?.play("bgMusic", true);
         this.add

@@ -61,15 +61,23 @@ export default class PlayerController {
     }
 
     handlePointerDown(pointer: Phaser.Input.Pointer) {
-        const deltaX = pointer.worldX - this.playerSprite.x;
-        const deltaY = pointer.worldY - this.playerSprite.y;
+        const screenWidth = this.scene.cameras.main.width;
+        const screenHeight = this.scene.cameras.main.height;
+
+        const centerX = screenWidth / 2;
+        const centerY = screenHeight / 2;
+
+        const touchX = pointer.x;
+        const touchY = pointer.y;
+
+        const deltaX = touchX - centerX;
+        const deltaY = touchY - centerY;
 
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
             this.currentDirection = { x: deltaX > 0 ? 1 : -1, y: 0 };
         } else {
             this.currentDirection = { x: 0, y: deltaY > 0 ? 1 : -1 };
         }
-
         if (this.currentDirection && !this.isMoving) {
             this.movePlayer(this.currentDirection.x, this.currentDirection.y);
         }

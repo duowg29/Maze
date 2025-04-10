@@ -8,7 +8,6 @@ import { LevelDTO } from "../dto/LevelDTO";
 import PlayerController from "../controllers/PlayerController";
 import Utils from "../utilities/Utils";
 import { Scene } from "phaser";
-import BackgroundLoader from "../utilities/BackgroundLoader";
 
 export default class GameScene extends Scene {
     public cellSize: number = 0;
@@ -51,23 +50,18 @@ export default class GameScene extends Scene {
     }
 
     preload(): void {
-        this.load.image("wall", "assets/img/wall.png");
-        this.load.image("goal", "assets/img/earth.png");
-        this.load.image("scorePowerUp", "assets/img/scorePowerUp.png");
-        this.load.image("timePowerUp", "assets/img/timePowerUp.png");
-        this.load.image("bgGame", "assets/img/bgGame.png");
         this.soundManager = new SoundManager(this, ["gameMusic", "scoreSound"]);
         this.soundManager.preload();
     }
 
     create(): void {
-        const backgroundLoader = new BackgroundLoader(
-            this,
-            "bgGame",
-            this.cameras.main.centerX,
-            this.cameras.main.centerY
-        );
-        backgroundLoader.loadBackground();
+        this.add
+            .image(
+                this.cameras.main.centerX,
+                this.cameras.main.centerY,
+                "backgroundGame"
+            )
+            .setDisplaySize(this.cameras.main.width, this.cameras.main.height);
 
         this.events.on("checkWin", this.checkWin, this);
         this.scoreText = this.add.text(
@@ -134,20 +128,39 @@ export default class GameScene extends Scene {
         this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
             this.playerController?.handlePointerDown(pointer);
         });
+        this.events.on("shutdown", this.onShutdown, this);
     }
 
     update(): void {
         if (this.gameOver) return;
         this.playerController?.update();
+        this.checkWin();
     }
 
     checkWin(): void {
-        if (this.player && this.goal) {
-            const goalX = this.goal.x / this.cellSize;
-            const goalY = this.goal.y / this.cellSize;
+        if (this.playerSprite && this.goal) {
+            const boundsPlayer = this.playerSprite.getBounds();
+            const boundsGoal = this.goal.getBounds();
+
+            const shrinkFactor = 0.6;
+            const playerHitbox = new Phaser.Geom.Rectangle(
+                boundsPlayer.x + (boundsPlayer.width * (1 - shrinkFactor)) / 2,
+                boundsPlayer.y + (boundsPlayer.height * (1 - shrinkFactor)) / 2,
+                boundsPlayer.width * shrinkFactor,
+                boundsPlayer.height * shrinkFactor
+            );
+            const goalHitbox = new Phaser.Geom.Rectangle(
+                boundsGoal.x + (boundsGoal.width * (1 - shrinkFactor)) / 2,
+                boundsGoal.y + (boundsGoal.height * (1 - shrinkFactor)) / 2,
+                boundsGoal.width * shrinkFactor,
+                boundsGoal.height * shrinkFactor
+            );
+
             if (
-                this.player.positionX === goalX &&
-                this.player.positionY === goalY
+                Phaser.Geom.Intersects.RectangleToRectangle(
+                    playerHitbox,
+                    goalHitbox
+                )
             ) {
                 this.updateScore(1);
                 this.soundManager?.play("scoreSound", false);
@@ -292,12 +305,23 @@ export default class GameScene extends Scene {
 
     endGame(): void {
         this.gameOver = true;
-        this.soundManager?.stop("gameMusic");
+        if (this.soundManager) {
+            this.soundManager.stop("gameMusic");
+            console.log("Stopping gameMusic via SoundManager");
+        }
+        this.sound.stopAll();
         this.timer?.stop();
-
         this.scene.start("GameOverScreen", {
             score: this.score,
             character: this.selectedCharacter,
         });
+    }
+    onShutdown(): void {
+        if (this.soundManager) {
+            this.soundManager.stop("gameMusic");
+            console.log("Stopping gameMusic on shutdown");
+        }
+        this.sound.stopAll();
+        console.log("Stopping all sounds on shutdown");
     }
 }

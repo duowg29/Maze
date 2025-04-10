@@ -1,6 +1,5 @@
 import { ButtonDTO } from "../dto/ButtonDTO";
 import Button from "../utilities/Button";
-import BackgroundLoader from "../utilities/BackgroundLoader";
 import SoundManager from "../utilities/SoundManager";
 import CharacterSelector from "../utilities/CharacterSelector";
 import { textStyle2 } from "../utilities/TextStyle";
@@ -9,7 +8,6 @@ import { Scene } from "phaser";
 
 export default class CharacterSelectionScene extends Scene {
     public characterSelector: CharacterSelector | null = null;
-    public backgroundLoader: BackgroundLoader | null = null;
     public soundManager: SoundManager | null = null;
 
     constructor() {
@@ -17,23 +15,18 @@ export default class CharacterSelectionScene extends Scene {
     }
 
     preload(): void {
-        this.load.image("rocket", "assets/img/rocket.png");
-        this.load.image("apple", "assets/img/apple.png");
-        this.load.image("ship", "assets/img/ship.png");
-        this.load.image("bgMenu", "assets/img/bgMenu.png");
-
         this.soundManager = new SoundManager(this, ["bgMusic"]);
         this.soundManager.preload();
     }
 
     create(): void {
-        this.backgroundLoader = new BackgroundLoader(
-            this,
-            "bgMenu",
-            this.cameras.main.centerX,
-            this.cameras.main.centerY
-        );
-        this.backgroundLoader.loadBackground();
+        this.add
+            .image(
+                this.cameras.main.centerX,
+                this.cameras.main.centerY,
+                "backgroundMenu"
+            )
+            .setDisplaySize(this.cameras.main.width, this.cameras.main.height);
 
         if (this.soundManager) {
             this.soundManager.play("bgMusic", true);
