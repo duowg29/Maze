@@ -3,8 +3,8 @@ import GamePlayScene from "./scenes/GamePlayScene";
 import GameScene from "./scenes/GameScene";
 import CharacterSelectionScene from "./scenes/CharacterSelectionScene";
 import GameOverScreen from "./scenes/GameOverScreen";
-import { LoadingScene } from "mct-common";
-import Boot from "./scenes/Boot";
+// import { LoadingScene } from "mct-common";
+// import Boot from "./scenes/Boot";
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
 const config: Phaser.Types.Core.GameConfig = {
@@ -38,8 +38,8 @@ const config: Phaser.Types.Core.GameConfig = {
         },
     },
     scene: [
-        Boot,
-        LoadingScene,
+        // Boot,
+        // LoadingScene,
         GamePlayScene,
         CharacterSelectionScene,
         GameScene,
