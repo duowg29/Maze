@@ -98,7 +98,5 @@ export default class PlayerController {
         (this.scene as any).powerUps.collectPowerUp(this.player);
     }
 
-    update() {
-        // Không còn logic liên quan đến Space nữa
-    }
+    update() {}
 }

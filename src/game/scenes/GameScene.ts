@@ -15,8 +15,8 @@ export default class GameScene extends Scene {
     public player: PlayerDTO | null = null;
     public mazeArray: number[][] = [];
     public score: number = 0;
-    public highScore: number = 0; // Thêm biến highScore
-    public highScoreText: Phaser.GameObjects.Text | null = null; // Thêm text cho highScore
+    public highScore: number = 0;
+    public highScoreText: Phaser.GameObjects.Text | null = null;
     public scoreText: Phaser.GameObjects.Text | null = null;
     public soundManager: SoundManager | null = null;
     public isSpacePressed: boolean = false;
@@ -39,10 +39,10 @@ export default class GameScene extends Scene {
 
     init(data: { character: any }): void {
         this.selectedCharacter = data.character;
-        this.score = this.registry.get("score") || 0; // Lấy score từ registry
+        this.score = this.registry.get("score") || 0;
         this.level.rows = this.registry.get("rows") || 12;
         this.level.cols = this.registry.get("cols") || 12;
-        this.highScore = this.registry.get("highScore") || 0; // Lấy highScore từ registry, mặc định là 0
+        this.highScore = this.registry.get("highScore") || 0;
         if (!this.selectedCharacter) {
             console.error(
                 "selectedCharacter is undefined. Make sure it is passed correctly from the previous scene."
@@ -71,21 +71,15 @@ export default class GameScene extends Scene {
 
         this.events.on("checkWin", this.checkWin, this);
         this.scoreText = this.add.text(
-            10,
+            50,
             650,
             `Score: ${this.score}`,
             textStyle2
         );
         this.highScoreText = this.add.text(
-            10,
-            670, // Dịch xuống dưới score một chút
-            `High Score: ${this.highScore}`,
-            textStyle2
-        );
-        this.tipsText = this.add.text(
-            170,
-            630,
-            "Space = Blink in the direction of movement",
+            350,
+            650,
+            `Highest Score: ${this.highScore}`,
             textStyle2
         );
 
@@ -182,9 +176,9 @@ export default class GameScene extends Scene {
 
     updateScore(points: number): void {
         this.score += points;
-        this.registry.set("score", this.score); // Lưu score vào registry
+        this.registry.set("score", this.score);
         if (this.player) {
-            this.player.score = this.score; // Đồng bộ với PlayerDTO
+            this.player.score = this.score;
         }
         this.scoreText?.setText(`Score: ${this.score}`);
         if (this.score > this.highScore) {
@@ -287,7 +281,6 @@ export default class GameScene extends Scene {
         ) {
             this.level.cols += 2;
             this.level.rows += 2;
-            // Lưu rows và cols vào registry
             this.registry.set("rows", this.level.rows);
             this.registry.set("cols", this.level.cols);
         }

@@ -1,4 +1,3 @@
-// GameOverScreen.ts
 import { ButtonDTO } from "../dto/ButtonDTO";
 import { textStyle1, textStyle2 } from "../utilities/TextStyle";
 import { Scene } from "phaser";
@@ -48,31 +47,26 @@ export default class GameOverScreen extends Scene {
 
         const exitButtonDTO = new ButtonDTO(
             "exitButton",
-            "Exit",
+            "Replay",
             this.cameras.main.centerX,
-            this.cameras.main.centerY + 80,
+            this.cameras.main.centerY + 100,
             () => {
-                // Lưu highScore trước khi reset
                 const currentHighScore = this.registry.get("highScore") || 0;
                 this.registry.set(
                     "highScore",
                     Math.max(currentHighScore, this.score)
                 );
-                // Reset score trong registry
                 this.registry.set("score", 0);
-                // Reset rows và cols về giá trị ban đầu (12x12)
                 this.registry.set("rows", 12);
                 this.registry.set("cols", 12);
-                // Reset score trong selectedCharacter nếu có
                 if (this.selectedCharacter) {
                     this.selectedCharacter.score = 0;
                 }
-                // Quay lại scene đầu tiên
                 this.scene.start("GamePlayScene");
             }
         );
 
-        const exitButton = this.add
+        const replayButton = this.add
             .text(
                 exitButtonDTO.positionX,
                 exitButtonDTO.positionY,

@@ -18,7 +18,7 @@ export class Timer {
         this.remainingTime = timeInSeconds;
         this.onComplete = onComplete;
         this.timerText = this.scene.add.text(
-            10,
+            50,
             620,
             `Time: ${this.remainingTime}`,
             textStyle2
