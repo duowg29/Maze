@@ -12,7 +12,6 @@ export default class PlayerController {
     public playerSprite: Phaser.GameObjects.Sprite;
     public mazeArray: number[][];
     public currentDirection: Direction | null = null;
-    public isSpacePressed: boolean = false;
     public isMoving: boolean = false;
     public cellSize: number;
 
@@ -31,7 +30,7 @@ export default class PlayerController {
     }
 
     handleKeyDown(event: KeyboardEvent) {
-        if (this.isMoving && !this.isSpacePressed) return;
+        if (this.isMoving) return;
 
         const key = event.keyCode;
         if (key === Phaser.Input.Keyboard.KeyCodes.LEFT) {
@@ -42,8 +41,6 @@ export default class PlayerController {
             this.currentDirection = { x: 0, y: -1 };
         } else if (key === Phaser.Input.Keyboard.KeyCodes.DOWN) {
             this.currentDirection = { x: 0, y: 1 };
-        } else if (key === Phaser.Input.Keyboard.KeyCodes.SPACE) {
-            this.isSpacePressed = true;
         }
 
         if (this.currentDirection && !this.isMoving) {
@@ -60,10 +57,6 @@ export default class PlayerController {
             key <= Phaser.Input.Keyboard.KeyCodes.DOWN
         ) {
             this.isMoving = false;
-        }
-
-        if (key === Phaser.Input.Keyboard.KeyCodes.SPACE) {
-            this.isSpacePressed = false;
         }
     }
 
@@ -106,8 +99,6 @@ export default class PlayerController {
     }
 
     update() {
-        if (this.isSpacePressed && this.currentDirection) {
-            this.movePlayer(this.currentDirection.x, this.currentDirection.y);
-        }
+        // Không còn logic liên quan đến Space nữa
     }
 }

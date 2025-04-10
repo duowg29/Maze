@@ -2,6 +2,7 @@ import { AUTO, Game } from "phaser";
 import GamePlayScene from "./scenes/GamePlayScene";
 import GameScene from "./scenes/GameScene";
 import CharacterSelectionScene from "./scenes/CharacterSelectionScene";
+import GameOverScreen from "./scenes/GameOverScreen";
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
@@ -35,7 +36,7 @@ const config: Phaser.Types.Core.GameConfig = {
             debugShowVelocity: false,
         },
     },
-    scene: [GamePlayScene, CharacterSelectionScene, GameScene],
+    scene: [GamePlayScene, CharacterSelectionScene, GameScene, GameOverScreen],
 };
 
 const StartGame = (parent: string) => {
