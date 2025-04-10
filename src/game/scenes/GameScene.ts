@@ -1,0 +1,286 @@
+import { MazeGenerator } from "../services/MazeGenerator";
+import { Timer } from "../utilities/Timer";
+import { PlayerDTO } from "../dto/PlayerDTO";
+import { PowerUp } from "../controllers/PowerUpManager";
+import SoundManager from "../utilities/SoundManager";
+import { textStyle2 } from "../utilities/TextStyle";
+import { LevelDTO } from "../dto/LevelDTO";
+import PlayerController from "../controllers/PlayerController";
+import Utils from "../utilities/Utils";
+import { Scene } from "phaser";
+import BackgroundLoader from "../utilities/BackgroundLoader";
+
+export default class GameScene extends Scene {
+    public cellSize: number = 0;
+    public player: PlayerDTO | null = null;
+    public mazeArray: number[][] = [];
+    public score: number = 0;
+    public scoreText: Phaser.GameObjects.Text | null = null;
+    public soundManager: SoundManager | null = null;
+    public isSpacePressed: boolean = false;
+    public currentDirection: any = null;
+    public level: LevelDTO = new LevelDTO("Level", 12, 12);
+    public maxLevelSize: number = 18;
+    public firstLevel: boolean = true;
+    public gameOver: boolean = false;
+    public selectedCharacter: any;
+    public goal: Phaser.GameObjects.Image | null = null;
+    public playerSprite: Phaser.GameObjects.Sprite | null = null;
+    public timer: Timer | null = null;
+    public playerController: PlayerController | null = null;
+    public tipsText: Phaser.GameObjects.Text | null = null;
+    public powerUps: PowerUp | null = null;
+
+    constructor() {
+        super({ key: "GameScene" });
+    }
+
+    init(data: { character: any }): void {
+        this.selectedCharacter = data.character;
+        if (!this.selectedCharacter) {
+            console.error(
+                "selectedCharacter is undefined. Make sure it is passed correctly from the previous scene."
+            );
+        }
+    }
+
+    preload(): void {
+        this.load.image("wall", "assets/img/wall.png");
+        this.load.image("goal", "assets/img/earth.png");
+        this.load.image("scorePowerUp", "assets/img/scorePowerUp.png");
+        this.load.image("timePowerUp", "assets/img/timePowerUp.png");
+        this.load.image("bgGame", "assets/img/bgGame.png");
+        this.soundManager = new SoundManager(this, ["gameMusic", "scoreSound"]);
+        this.soundManager.preload();
+    }
+
+    create(): void {
+        const backgroundLoader = new BackgroundLoader(
+            this,
+            "bgGame",
+            this.cameras.main.centerX,
+            this.cameras.main.centerY
+        );
+        backgroundLoader.loadBackground();
+
+        this.events.on("checkWin", this.checkWin, this);
+        this.scoreText = this.add.text(
+            10,
+            650,
+            `Score: ${this.score}`,
+            textStyle2
+        );
+        this.tipsText = this.add.text(
+            170,
+            630,
+            "Space = Blink in the direction of movement",
+            textStyle2
+        );
+
+        if (this.soundManager && !this.soundManager.isPlaying("gameMusic")) {
+            this.soundManager.play("gameMusic", true);
+        }
+
+        this.timer = new Timer(this, 15, this.endGame.bind(this));
+        this.timer.start();
+
+        if (this.input.keyboard) {
+            this.input.keyboard.on("keydown", (event: KeyboardEvent) => {
+                if (
+                    event.keyCode >= Phaser.Input.Keyboard.KeyCodes.LEFT &&
+                    event.keyCode <= Phaser.Input.Keyboard.KeyCodes.DOWN
+                ) {
+                    event.preventDefault();
+                }
+            });
+        }
+
+        this.createNewLevel();
+
+        if (this.player) {
+            this.playerController = new PlayerController(
+                this,
+                this.player,
+                this.playerSprite ??
+                    new Phaser.GameObjects.Sprite(this, 0, 0, "defaultSprite"),
+                this.mazeArray,
+                this.cellSize
+            );
+        }
+
+        if (this.input.keyboard) {
+            if (this.playerController) {
+                this.input.keyboard.on(
+                    "keydown",
+                    this.playerController.handleKeyDown.bind(
+                        this.playerController
+                    )
+                );
+                this.input.keyboard.on(
+                    "keyup",
+                    this.playerController.handleKeyUp.bind(
+                        this.playerController
+                    )
+                );
+            }
+        }
+
+        this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+            this.playerController?.handlePointerDown(pointer);
+        });
+    }
+
+    update(): void {
+        if (this.gameOver) return;
+        this.playerController?.update();
+    }
+
+    checkWin(): void {
+        if (this.player && this.goal) {
+            const goalX = this.goal.x / this.cellSize;
+            const goalY = this.goal.y / this.cellSize;
+            if (
+                this.player.positionX === goalX &&
+                this.player.positionY === goalY
+            ) {
+                this.updateScore(1);
+                this.soundManager?.play("scoreSound", false);
+                this.resetGame();
+            }
+        }
+    }
+    updateCellSize(): void {
+        const canvas = this.game.scale.canvas;
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+
+        const smallerDimension = Math.min(canvasWidth, canvasHeight);
+        this.cellSize =
+            smallerDimension /
+            Math.max(this.level.cols + 2, this.level.rows + 2);
+
+        console.log(this.game.scale.canvas.width);
+        console.log(this.game.scale.canvas.height);
+
+        console.log("Canvas Width:", canvasWidth);
+        console.log("Canvas Height:", canvasHeight);
+        console.log("Cell Size:", this.cellSize);
+        console.log("Total Width:", this.cellSize * this.level.cols);
+    }
+
+    updateScore(points: number): void {
+        this.score += points;
+        this.scoreText?.setText(`Score: ${this.score}`);
+    }
+
+    createNewLevel(): void {
+        this.updateCellSize();
+
+        this.mazeArray = MazeGenerator.generateMaze(
+            this.level.rows,
+            this.level.cols
+        );
+        MazeGenerator.drawMaze(this);
+
+        const playerPos = Utils.getRandomPosition(this.mazeArray);
+        const goalPos = Utils.getRandomPosition(this.mazeArray);
+
+        this.goal = this.add
+            .image(goalPos.x * this.cellSize, goalPos.y * this.cellSize, "goal")
+            .setOrigin(0, 0)
+            .setDisplaySize(this.cellSize, this.cellSize);
+
+        this.player = new PlayerDTO(
+            "player",
+            this.selectedCharacter.name,
+            playerPos.x,
+            playerPos.y,
+            0,
+            this.selectedCharacter.avatar,
+            this.selectedCharacter.description
+        );
+        this.playerSprite = this.add
+            .sprite(
+                this.player.positionX * this.cellSize,
+                this.player.positionY * this.cellSize,
+                this.selectedCharacter.avatar
+            )
+            .setOrigin(0, 0)
+            .setDisplaySize(this.cellSize, this.cellSize);
+
+        this.powerUps = new PowerUp(this, this.mazeArray, this.cellSize);
+        this.powerUps.timer = this.timer;
+    }
+
+    resetGame(): void {
+        this.updateCellSize();
+
+        this.timer?.reset(15);
+        this.scene.restart({ character: this.selectedCharacter });
+
+        this.children.list.forEach((child) => {
+            if (child && child.name === "wall") {
+                child.destroy();
+            }
+        });
+
+        this.checkLevelUp();
+        if (this.player) {
+            this.powerUps?.collectPowerUp(this.player);
+        }
+        this.powerUps?.activePowerUps.forEach((powerUp) => {
+            if (powerUp && powerUp.sprite) {
+                powerUp.sprite.destroy();
+            }
+        });
+        if (this.powerUps) {
+            this.powerUps.activePowerUps = [];
+        }
+        this.mazeArray = MazeGenerator.generateMaze(10, 10);
+
+        const playerPos = Utils.getRandomPosition(this.mazeArray);
+        const goalPos = Utils.getRandomPosition(this.mazeArray);
+
+        if (this.player) {
+            this.player.positionX = playerPos.x;
+            this.player.positionY = playerPos.y;
+            this.playerSprite?.setPosition(
+                this.player.positionX * this.cellSize,
+                this.player.positionY * this.cellSize
+            );
+        }
+
+        this.goal?.destroy();
+        this.goal = this.add
+            .image(goalPos.x * this.cellSize, goalPos.y * this.cellSize, "goal")
+            .setOrigin(0, 0)
+            .setDisplaySize(this.cellSize, this.cellSize);
+        this.powerUps = new PowerUp(this, this.mazeArray, this.cellSize);
+        this.powerUps.timer = this.timer;
+    }
+
+    checkLevelUp(): void {
+        if (
+            this.level.cols < this.maxLevelSize &&
+            this.level.rows < this.maxLevelSize
+        ) {
+            this.level.cols += 2;
+            this.level.rows += 2;
+        }
+        console.log(this.level.cols);
+        console.log(this.level.rows);
+
+        this.createNewLevel();
+    }
+
+    endGame(): void {
+        this.gameOver = true;
+        this.soundManager?.stop("gameMusic");
+        this.timer?.stop();
+
+        this.scene.start("GameOverScreen", {
+            score: this.score,
+            character: this.selectedCharacter,
+        });
+    }
+}
